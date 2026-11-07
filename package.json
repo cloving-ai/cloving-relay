@@ -6,10 +6,12 @@
   "type": "module",
   "main": "dist/index.js",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./relay": "./dist/relay.js"
   },
   "bin": {
-    "cloving-zapier": "dist/cli.js"
+    "cloving-zapier": "dist/cli.js",
+    "cloving-mcp": "dist/mcp-cli.js"
   },
   "files": [
     "dist",

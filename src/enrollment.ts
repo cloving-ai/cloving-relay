@@ -9,6 +9,8 @@ import {
 import type { Credential, Transport } from "./client.js";
 
 export interface ConnectionConfig extends LocalGrant {
+  readonly integration?: "zapier" | "mcp";
+  readonly permissions?: readonly string[];
   readonly origin: string;
   readonly runtimeDirectory: string;
   readonly daemonId: string;

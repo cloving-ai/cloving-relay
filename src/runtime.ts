@@ -61,6 +61,10 @@ export class Store {
     }
     return records;
   }
+
+  async remove(key: string): Promise<void> {
+    await rm(this.path(key), { force: true });
+  }
 }
 
 export const serviceRequest: (

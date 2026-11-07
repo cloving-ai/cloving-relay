@@ -4,6 +4,8 @@ import { object, LocalConnection } from "./local.js";
 import type { ConnectionConfig, EnrollmentPorts } from "./enrollment.js";
 
 export interface PreparationConfig {
+  readonly integration?: "zapier" | "mcp";
+  readonly permissions?: readonly string[];
   readonly version: 2;
   readonly setupId: string;
   readonly origin: string;
@@ -20,6 +22,8 @@ export async function prepare(
     runtimeDirectory: string;
     workflows: readonly string[];
     name?: string;
+    integration?: "zapier" | "mcp";
+    permissions?: readonly string[];
   },
   ports: EnrollmentPorts,
 ): Promise<{ config: PreparationConfig; setupUrl: string }> {
@@ -49,6 +53,7 @@ export async function prepare(
     await ports.transport(daemon.token)(
       "POST",
       "/api/v1/relay/automation_setups",
+      ...(options.integration === "mcp" ? [{ integration: "mcp" }] : []),
     ),
   );
   if (
@@ -61,6 +66,12 @@ export async function prepare(
   return {
     config: {
       version: 2,
+      ...(options.integration === "mcp"
+        ? {
+            integration: "mcp",
+            permissions: options.permissions ?? ["read", "start"],
+          }
+        : {}),
       setupId: setup.setup_id,
       origin: options.origin,
       runtimeDirectory: options.runtimeDirectory,
@@ -69,13 +80,14 @@ export async function prepare(
       keys,
       workflows: [...new Set(options.workflows)],
     },
-    setupUrl: `${options.origin}/connections/zapier/${setup.setup_id}?${new URLSearchParams({ claim_code: setup.claim_code })}`,
+    setupUrl: `${options.origin}/connections/${options.integration ?? "zapier"}/${setup.setup_id}?${new URLSearchParams({ claim_code: setup.claim_code })}`,
   };
 }
 
 export function pendingCode(config: PreparationConfig, value: unknown): string {
   const row = object(value);
   if (
+    (row.integration ?? "zapier") !== (config.integration ?? "zapier") ||
     typeof row.connection_id !== "string" ||
     !/^[A-Za-z0-9_-]{1,64}$/.test(row.connection_id) ||
     typeof row.agreement_public_key !== "string" ||
@@ -102,6 +114,12 @@ export function approvePreparation(
   const row = object(value);
   return {
     version: 1,
+    ...(config.integration === "mcp"
+      ? {
+          integration: "mcp",
+          permissions: config.permissions ?? ["read", "start"],
+        }
+      : {}),
     origin: config.origin,
     runtimeDirectory: config.runtimeDirectory,
     daemonId: config.daemonId,

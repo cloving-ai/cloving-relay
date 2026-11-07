@@ -1,4 +1,4 @@
-# Cloving for Zapier
+# Cloving integrations: Zapier and encrypted MCP
 
 Start local Cloving workflows and read their state through an encrypted relay.
 Zapier and your computer encrypt, decrypt, and verify messages. `cloving-app`
@@ -140,7 +140,106 @@ allow only that connection's mailbox operations and are stored as digests.
 Requests are acknowledged only after local processing and durable receipt
 storage. Invalid ciphertext is discarded individually; transient service or
 transport failures preserve the request for retry. Workflow approval operations
-are never admitted through this integration.
+are never admitted through the Zapier adapter.
+
+## Encrypted MCP bridge
+
+The package also installs `cloving-mcp`. It speaks MCP over standard input/output
+alongside your harness and encrypts calls before they reach the relay. The
+workflow computer decrypts them and enforces its local workflow and tool grants.
+The relay never receives plaintext tool arguments or results. `/mcp` on the
+Cloving site is a setup guide, rather than a standard HTTP MCP endpoint.
+
+On the workflow computer, start Cloving in your project, then run:
+
+```sh
+cloving integrations connect mcp
+```
+
+All currently discovered workflows start selected. Confirm or change them in
+the terminal, open the printed link, and click **Link computer**. On the machine
+where your MCP harness runs, pair a separate connection for that harness:
+
+```sh
+cloving integrations pair mcp --name studio
+```
+
+Sign in, choose the linked MCP computer, and click **Authorize MCP**. The harness
+terminal prints a pairing code. On the workflow computer, run:
+
+```sh
+cloving integrations approve mcp
+cloving integrations serve mcp
+```
+
+Paste that pairing code at the approval prompt. Keep `serve` running on the
+workflow computer. It connects outward to the relay; no inbound port is needed
+on that computer. Configure a harness that supports local MCP processes:
+
+```json
+{
+  "mcpServers": {
+    "cloving": {
+      "command": "cloving-mcp",
+      "args": ["--connection", "studio"]
+    }
+  }
+}
+```
+
+`cloving mcp --connection studio` launches the same bridge. Use the full path
+to the installed executable if the harness has a different PATH. Pairing prints
+configuration including a custom `--state-dir` when supplied. Client credentials
+default to `$XDG_STATE_HOME/cloving/mcp/clients`, or
+`~/.local/state/cloving/mcp/clients`, with private directories and mode 0600 files.
+`CLOVING_MCP_STATE_DIR` overrides this base directory. Host grants remain in the
+selected project's private `state/mcp` directory, separately from Zapier.
+For a headless harness machine, forward its printed loopback callback port to
+your browser machine before completing sign-in. `--no-open` prints the link.
+
+The bridge supports MCP `2026-07-28` stateless discovery and legacy initialization
+versions `2025-11-25`, `2025-06-18`, and `2025-03-26`. Its default tools are
+`cloving_workflows`, `cloving_run`, `cloving_status`, `cloving_questions`, and
+`cloving_events`. Discovery returns input fields so the harness can choose a
+workflow without asking you to remember its name. Event and run lists accept
+bounded `limit` and `after` parameters; run results include a `next` cursor.
+Reads of runs outside the selected workflows are refused.
+
+Additional tools require flags during host setup: `--allow-control` grants
+pause/resume/drop; `--allow-answer` grants question answers; `--allow-approvals`
+grants approve/deny. Decision calls require the exact run, decision reference,
+revision, generation, and subject digest returned by `cloving_questions`.
+Changing permissions requires a new pairing; additions to the project workflow
+catalog are not implicitly granted.
+
+Mutations require a stable `commandId`. Retry a lost reply with the same ID and
+arguments; changed arguments conflict. Pending native commands are recorded
+before submission so a bridge restart can recover their original receipts.
+Requests expire after at most 60 seconds, normally 30. Offline reads return an
+error rather than pretending to have live state. Cancelling a tool request stops
+waiting for its reply; it does not retract an already queued or admitted command.
+Use the explicit run controls when granted. Oversized results return
+`result-too-large`; request fewer records. Replies are limited to 16 KiB before
+encryption wrapping. A run scan that exceeds its local work budget returns
+`status-scan-limit-reached` rather than silently hiding later runs.
+
+OAuth client tokens are bound to MCP and isolated from Zapier. Multiple bridge
+processes sharing one saved connection coordinate token rotation under a local
+SQLite lock and reload the rotated credential. An interrupted refresh is marked
+locally; the old refresh token is never automatically replayed. Recover or remove
+a saved harness connection with:
+
+```sh
+cloving integrations unpair mcp --name studio
+cloving integrations pair mcp --name studio
+```
+
+Unpair revokes the server connection before removing its local credential.
+The workflow computer can revoke a grant immediately with
+`cloving integrations remove mcp CONNECTION_ID`. Relay revocation also removes
+queued data. Data already delivered to a harness is subject to that harness's
+retention. Each endpoint can read its workflow data; the relay sees routing
+metadata, public keys, timestamps, and padded ciphertext sizes.
 
 ## Verification
 
