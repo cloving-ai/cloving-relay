@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { homedir } from "node:os";
 import { readFile } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
@@ -18,6 +18,28 @@ import { object } from "./local.js";
 import { selectWorkflows } from "./selection.js";
 import { execFile } from "node:child_process";
 import { createInterface } from "node:readline/promises";
+
+export function mcpHarnessConfiguration(input: {
+  name: string;
+  nodePath: string;
+  entrypoint: string;
+  stateDirectory: string;
+}) {
+  return {
+    mcpServers: {
+      cloving: {
+        command: input.nodePath,
+        args: [
+          input.entrypoint,
+          "--connection",
+          input.name,
+          "--state-dir",
+          resolve(input.stateDirectory),
+        ],
+      },
+    },
+  };
+}
 
 async function answer(question: string): Promise<string> {
   const terminal = createInterface({

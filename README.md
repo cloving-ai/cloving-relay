@@ -189,7 +189,8 @@ on that computer. Configure a harness that supports local MCP processes:
 
 `cloving mcp --connection studio` launches the same bridge. Use the full path
 to the installed executable if the harness has a different PATH. Pairing prints
-configuration including a custom `--state-dir` when supplied. Client credentials
+configuration with the full Node and bridge paths and the resolved private
+state directory, so the harness can use a different PATH or working directory. Client credentials
 default to `$XDG_STATE_HOME/cloving/mcp/clients`, or
 `~/.local/state/cloving/mcp/clients`, with private directories and mode 0600 files.
 `CLOVING_MCP_STATE_DIR` overrides this base directory. Host grants remain in the

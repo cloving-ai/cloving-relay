@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { execFile } from "node:child_process";
-import { runIntegrationCli } from "./integration-cli.js";
+import {
+  runIntegrationCli,
+  mcpHarnessConfiguration,
+} from "./integration-cli.js";
+import { fileURLToPath } from "node:url";
 import { Store } from "./runtime.js";
 import { object } from "./local.js";
 import { relayOrigin } from "./http.js";
@@ -38,14 +42,15 @@ async function main(): Promise<void> {
     );
     return;
   }
-  const directory =
+  const directory = resolve(
     values["state-dir"] ??
-    process.env.CLOVING_MCP_STATE_DIR ??
-    join(
-      process.env.XDG_STATE_HOME ?? join(homedir(), ".local", "state"),
-      "cloving",
-      "mcp",
-    );
+      process.env.CLOVING_MCP_STATE_DIR ??
+      join(
+        process.env.XDG_STATE_HOME ?? join(homedir(), ".local", "state"),
+        "cloving",
+        "mcp",
+      ),
+  );
   const store = new Store(join(directory, "clients"));
   const name = values.connection ?? values.name ?? "default";
   if (!/^[A-Za-z0-9_-]{1,64}$/.test(name))
@@ -98,7 +103,7 @@ async function main(): Promise<void> {
       clientSigningPublicKey: credential.keys.signingPublicKey,
     });
     process.stdout.write(
-      `Signed in. Your computer still needs to approve this harness.\n\nPairing code: ${code}\n\nOn your Cloving computer, run:\n  cloving integrations approve mcp\n\nPaste the pairing code above there, then keep cloving integrations serve mcp running.\n\nAdd this MCP server to your harness configuration:\n${JSON.stringify({ mcpServers: { cloving: { command: "cloving-mcp", args: ["--connection", name, ...(values["state-dir"] ? ["--state-dir", directory] : [])] } } }, null, 2)}\n\nThe harness keeps its private keys here. The relay receives encrypted messages only.\n`,
+      `Signed in. Your computer still needs to approve this harness.\n\nPairing code: ${code}\n\nOn your Cloving computer, run:\n  cloving integrations approve mcp\n\nPaste the pairing code above there, then keep cloving integrations serve mcp running.\n\nAdd this MCP server to your harness configuration:\n${JSON.stringify(mcpHarnessConfiguration({ name, nodePath: process.execPath, entrypoint: fileURLToPath(import.meta.url), stateDirectory: directory }), null, 2)}\n\nThe harness keeps its private keys here. The relay receives encrypted messages only.\n`,
     );
     return;
   }
