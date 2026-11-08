@@ -1,8 +1,8 @@
 {
-  "name": "cloving-zapier",
-  "version": "2.0.0",
+  "name": "cloving-relay",
+  "version": "2.0.1",
   "private": true,
-  "description": "End-to-end encrypted Zapier integration for local Cloving workflows",
+  "description": "End-to-end encrypted MCP and Zapier relay for local Cloving workflows",
   "type": "module",
   "main": "dist/index.js",
   "exports": {
@@ -36,5 +36,9 @@
     "@types/node": "22.19.0",
     "typescript": "6.0.3",
     "zapier-platform-cli": "19.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cloving-ai/cloving-relay.git"
   }
 }

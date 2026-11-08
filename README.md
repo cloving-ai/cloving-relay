@@ -1,8 +1,13 @@
-# Cloving integrations: Zapier and encrypted MCP
+# Cloving Relay: encrypted MCP and Zapier
 
 Start local Cloving workflows and read their state through an encrypted relay.
 Zapier and your computer encrypt, decrypt, and verify messages. `cloving-app`
 stores ciphertext and routing metadata; it has no workflow decryption keys.
+
+The installable package is named `cloving-relay`. Its source and release downloads
+are public at [cloving-ai/cloving-relay](https://github.com/cloving-ai/cloving-relay). It provides the
+`cloving-mcp` and `cloving-zapier` commands used by the Cloving CLI. The
+Zapier OAuth client ID remains unchanged.
 
 ## Components
 
@@ -25,8 +30,19 @@ Use Node 22.23.1 or later. Test the Zapier code on Node 22.
 npm ci --ignore-scripts
 npm run check
 npm pack --ignore-scripts
-npm install --global ./cloving-zapier-2.0.0.tgz --ignore-scripts
+npm install --global ./cloving-relay-2.0.1.tgz --ignore-scripts
 ```
+
+### Updating from cloving-zapier 2.0.0
+
+Existing installations continue to work. The rename does not require an upgrade.
+To install the new package in place of the old one, first run
+`npm uninstall --global cloving-zapier`, then install the new tarball as above.
+Saved connections remain in their private state directories. Pair MCP again
+and replace the harness configuration with the newly printed configuration: it
+contains absolute executable paths that change with the package name.
+
+## Connect Zapier
 
 Run the updated Cloving CLI from the repository whose workflows you want to
 expose. Start its service first. The Rails relay must have the new migrations
@@ -77,7 +93,7 @@ can be supervised alongside `cloving start`.
 The hosted Zapier app signs in through cloving.ai. A self-hosted OAuth deployment
 requires configuring the integration's origin and its registered redirect URI;
 the local adapter accepts `--origin` (HTTPS, or loopback HTTP for development).
-Direct use of `cloving-zapier` also accepts
+The Zapier adapter command `cloving-zapier` also accepts
 `--runtime-dir /absolute/path/to/run`. `--state-dir` overrides private storage.
 
 ```sh
