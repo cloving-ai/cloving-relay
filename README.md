@@ -6,8 +6,7 @@ stores ciphertext and routing metadata; it has no workflow decryption keys.
 
 The installable package is named `cloving-relay`. Its source and release downloads
 are public at [cloving-ai/cloving-relay](https://github.com/cloving-ai/cloving-relay). It provides the
-`cloving-mcp` and `cloving-zapier` commands used by the Cloving CLI. The
-Zapier OAuth client ID remains unchanged.
+`cloving-mcp` and `cloving-zapier` commands used by the Cloving CLI.
 
 ## Components
 
@@ -33,20 +32,10 @@ npm pack --ignore-scripts
 npm install --global ./cloving-relay-2.0.1.tgz --ignore-scripts
 ```
 
-### Updating from cloving-zapier 2.0.0
-
-Existing installations continue to work. The rename does not require an upgrade.
-To install the new package in place of the old one, first run
-`npm uninstall --global cloving-zapier`, then install the new tarball as above.
-Saved connections remain in their private state directories. Pair MCP again
-and replace the harness configuration with the newly printed configuration: it
-contains absolute executable paths that change with the package name.
-
 ## Connect Zapier
 
-Run the updated Cloving CLI from the repository whose workflows you want to
-expose. Start its service first. The Rails relay must have the new migrations
-and the automation controllers deployed before connecting.
+Run Cloving from the repository whose workflows you want to expose. Start its
+service first.
 
 ```sh
 cloving start
@@ -280,25 +269,6 @@ socket, duplicate/restart handling, permission refusal, state events, and
 revocation. An interoperability test exchanges messages between the Node 22
 HPKE implementation and Cloving's native encryption. It uses synthetic inputs
 and keys and removes test services and temporary data afterward.
-
-## Private Zapier release
-
-The private [Cloving integration](https://developer.zapier.com/app/249365/versions)
-is already registered. Version 2.0.0 introduces OAuth; version 1.0.1 used a
-manually copied connection credential.
-After deploying the Rails relay changes and installing the updated local CLI,
-authenticate the Zapier CLI with the account that owns this integration. Use
-`ZAPIER_DEPLOY_KEY` for a separate account without replacing an existing CLI login.
-Keep that key outside this checkout. Then select Cloving when linking:
-
-```sh
-npx zapier-platform link
-npx zapier-platform push
-```
-
-The initial version is private. Connect it to a test repository and run a real
-Zap before inviting others. Keep deploy credentials out of this checkout.
-Public listing and instant REST Hook triggers are later release work.
 
 ## Dependencies
 
